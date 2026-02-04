@@ -74,7 +74,7 @@ fastify.post('/login', async(req,reply)=>{
         if(!isMatch){
           return reply.view('login.ejs',{currentUser:req.user,error:"Password Incorrect"})
         }
-         const token = fastify.jwt.sign({ id: userdetail.user_id, user_name: userdetail.user_name, role_id: userdetail.role_id });
+         const token = fastify.jwt.sign({ user_id: userdetail.user_id, user_name: userdetail.user_name, role_id: userdetail.role_id });
          console.log(token)
          reply.setCookie('token', token, {
                     httpOnly: true,
