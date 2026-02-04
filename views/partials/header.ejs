@@ -9,6 +9,9 @@
 
 <body>
 
-    <%- include('./nav') %>
 
+    <% if(currentUser) { %>
+
+    <%- include('./nav') %>
+    <%}%>
     <div class="container mt-4">
