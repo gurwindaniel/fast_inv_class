@@ -1,0 +1,140 @@
+<%- include('./partials/header') %>
+
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">
+            <i class="bi bi-geo-alt"></i> Create New Address
+          </h3>
+        </div>
+
+        <div class="card-body">
+          <!-- Success Message -->
+          <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <i class="bi bi-check-circle"></i> <%= message %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+
+          <!-- Error Message -->
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <i class="bi bi-exclamation-circle"></i> <%= error %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+
+          <!-- Address Form -->
+          <form method="POST" action="/address/create" id="addressForm" novalidate>
+            
+            <!-- Address Name -->
+            <div class="mb-3">
+              <label for="address_name" class="form-label">
+                <i class="bi bi-house-door"></i> Address Name
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="address_name" 
+                name="address_name"
+                placeholder="e.g., Home, Office, Warehouse" 
+                required
+              />
+              <small class="text-muted">Minimum 3 characters</small>
+            </div>
+
+            <!-- Person Type -->
+            <div class="mb-3">
+              <label for="type_id" class="form-label">
+                <i class="bi bi-person-badge"></i> Person Type
+              </label>
+              <select 
+                class="form-select" 
+                id="type_id" 
+                name="type_id" 
+                required
+              >
+                <option value="">-- Select Person Type --</option>
+                <% if (typeof personTypes !== 'undefined' && personTypes.length > 0) { %>
+                  <% personTypes.forEach(pt => { %>
+                    <option value="<%= pt.type_id %>"><%= pt.person_type %></option>
+                  <% }); %>
+                <% } %>
+              </select>
+              <small class="text-muted">Choose whether this is a Customer or Vendor address</small>
+            </div>
+
+            <!-- Location -->
+            <div class="mb-3">
+              <label for="locations" class="form-label">
+                <i class="bi bi-map"></i> Location / Street Address
+              </label>
+              <textarea 
+                class="form-control" 
+                id="locations" 
+                name="locations" 
+                rows="3"
+                placeholder="e.g., 123 Main Street, Building A, Suite 100"
+                required
+              ></textarea>
+              <small class="text-muted">Minimum 5 characters</small>
+            </div>
+
+            <!-- Pincode -->
+            <div class="mb-3">
+              <label for="pincode" class="form-label">
+                <i class="bi bi-mailbox"></i> Pincode
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="pincode" 
+                name="pincode"
+                placeholder="e.g., 123456" 
+                pattern="[0-9]{6,8}"
+                required
+              />
+              <small class="text-muted">Enter 6-8 digit pincode</small>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Address
+              </button>
+              <a href="/address/list" class="btn btn-secondary">
+                <i class="bi bi-list"></i> View All Addresses
+              </a>
+              <a href="/grn" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to GRN
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Info Card -->
+      <div class="card mt-4 bg-light">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-info-circle"></i> Information
+          </h5>
+          <ul class="small text-muted mb-0">
+            <li>Addresses are saved with your user account.</li>
+            <li>You can create multiple addresses (Customer or Vendor).</li>
+            <li>Each address is timestamped for reference.</li>
+            <li>Click "View All Addresses" to see your saved addresses.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap Icons CDN (for nice icons) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/bootstrap-icons.min.css">
+
+<%- include('./partials/footer') %>

@@ -1,6 +1,10 @@
 // CommonJs
 const fastify = require('fastify')({
-  logger: true
+  logger: true,
+  ajv:{
+    customOptions:{allErrors:true},
+    plugins:[require('ajv-errors')],
+  }
 })
 const pool=require('./db/pool.js')
 const fastifyStatic = require('@fastify/static')
@@ -28,11 +32,13 @@ fastify.addHook('preHandler', async (request, reply) => {
     if (publicRoutes.includes(url)) return;
 
     try {
-        await request.jwtVerify();
+    const decoded = await request.jwtVerify();
+    request.user = decoded; // Ensure req.user is set for all authenticated requests
     } catch (err) {
         return reply.redirect('/');
     }
 });
+
 
 
 
@@ -87,6 +93,8 @@ fastify.post('/login', async(req,reply)=>{
 
 })
 
+
+
 fastify.get('/users', async(request, reply) => {
 const roles=await pool.query('SELECT * FROM roles')
 
@@ -104,8 +112,6 @@ const roles=await pool.query('SELECT * FROM roles')
  // Handle form POST
   fastify.post('/users/create', async (req, reply) => {
     const { user_name, passwords, role_id } = req.body;
-    console.log(req.body);
-   
 
     try {
        let roleid =Number(role_id);
@@ -123,6 +129,110 @@ const roles=await pool.query('SELECT * FROM roles')
         return reply.send({ success: false, message: err.message });
     }
 });
+
+ // Display address form
+  fastify.get('/address', 
+    { preHandler: fastify.authenticate },
+    async (req, reply) => {
+      try {
+        const personTypes = await pool.query(
+          "SELECT type_id, person_type FROM person_type ORDER BY type_id ASC"
+        );
+        
+        return reply.view('address.ejs', {
+          personTypes: personTypes.rows,
+          currentUser: req.user || null,
+          message: null,
+          error: null
+        });
+      } catch (err) {
+        console.error(err);
+        return reply.view('address.ejs', {
+          personTypes: [],
+          currentUser: req.user || null,
+          message: null,
+          error: 'Failed to load person types'
+        });
+      }
+    }
+  );
+
+  // Handle address creation
+  fastify.post('/address/create', async (req, reply) => {
+      try {
+        const { address_name, type_id, locations, pincode } = req.body;
+        const user_id = req.user.id;
+
+        // Validate type_id and pincode are valid integers
+        const typeIdInt = parseInt(type_id, 10);
+        const pincodeInt = parseInt(pincode, 10);
+        if (isNaN(typeIdInt) || isNaN(pincodeInt)) {
+          const personTypes = await pool.query(
+            "SELECT type_id, person_type FROM person_type ORDER BY type_id ASC"
+          );
+          return reply.view('address.ejs', {
+            personTypes: personTypes.rows,
+            currentUser: req.user || null,
+            message: null,
+            error: 'Invalid type or pincode. Please enter valid numbers.'
+          });
+        }
+
+        const result = await pool.query(
+          "INSERT INTO address (address_name, type_id, locations, pincode, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING address_id",
+          [address_name, typeIdInt, locations, pincodeInt, user_id]
+        );
+
+        // Fetch person types to re-render form with success message
+        const personTypes = await pool.query(
+          "SELECT type_id, person_type FROM person_type ORDER BY type_id ASC"
+        );
+
+        return reply.view('address.ejs', {
+          personTypes: personTypes.rows,
+          currentUser: req.user || null,
+          message: `Address created successfully! Address ID: ${result.rows[0].address_id}`,
+          error: null
+        });
+      } catch (err) {
+        console.error('Address creation error:', err);
+        const personTypes = await pool.query(
+          "SELECT type_id, person_type FROM person_type ORDER BY type_id ASC"
+        );
+        return reply.view('address.ejs', {
+          personTypes: personTypes.rows,
+          currentUser: req.user || null,
+          message: null,
+          error: err.message || 'Failed to create address'
+        });
+      }
+    }
+  );
+
+  // Optional: Display list of user's addresses
+  fastify.get('/address/list',
+    { preHandler: fastify.authenticate },
+    async (req, reply) => {
+      try {
+        const addresses = await pool.query(
+          `SELECT a.address_id, a.address_name, pt.person_type, a.locations, a.pincode, a.address_date
+           FROM address a
+           JOIN person_type pt ON a.type_id = pt.type_id
+           WHERE a.user_id = $1
+           ORDER BY a.address_date DESC`,
+          [req.user.id]
+        );
+
+        return reply.view('addressList.ejs', {
+          addresses: addresses.rows,
+          currentUser: req.user || null
+        });
+      } catch (err) {
+        console.error(err);
+        return reply.send({ error: err.message });
+      }
+    }
+  );
 
 // Logout route
 fastify.get('/logout', async (req, reply) => {
