@@ -81,7 +81,7 @@ fastify.post('/login', async(req,reply)=>{
     }
    
   }catch(e){
-   
+   reply.view('login.ejs',{error:"Server Error"})
 
   }
 
