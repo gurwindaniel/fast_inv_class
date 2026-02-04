@@ -161,7 +161,7 @@ const roles=await pool.query('SELECT * FROM roles')
   fastify.post('/address/create', async (req, reply) => {
       try {
         const { address_name, type_id, locations, pincode } = req.body;
-        const user_id = req.user.id;
+        const user_id = req.user.user_id;
 
         // Validate type_id and pincode are valid integers
         const typeIdInt = parseInt(type_id, 10);
@@ -220,7 +220,7 @@ const roles=await pool.query('SELECT * FROM roles')
            JOIN person_type pt ON a.type_id = pt.type_id
            WHERE a.user_id = $1
            ORDER BY a.address_date DESC`,
-          [req.user.id]
+          [req.user.user_id]
         );
 
         return reply.view('addressList.ejs', {
