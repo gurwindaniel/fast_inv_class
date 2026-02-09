@@ -6,6 +6,7 @@ const fastify = require('fastify')({
     plugins:[require('ajv-errors')],
   }
 })
+const createUserSchema = require('./schema/users.schema.js')
 const pool=require('./db/pool.js')
 const fastifyStatic = require('@fastify/static')
 const bcryptjs=require('bcryptjs');
@@ -99,36 +100,75 @@ fastify.get('/users', async(request, reply) => {
 const roles=await pool.query('SELECT * FROM roles')
 
  
-  try{
- return reply.view('users.ejs', { currentUser: request.user , roles:roles.rows})
-  }catch(err){
-    console.error(err)
-    return reply.status(500).send('Server Error')
-  }
+  return reply.view('users.ejs', {
+    roles: roles.rows,
+    currentUser: request.user,
+    errors: null,
+    formData: {},
+    success: null,
+    error: null
+  });
+
+
 })
 
 //submit users
 
  // Handle form POST
-  fastify.post('/users/create', async (req, reply) => {
-    const { user_name, passwords, role_id } = req.body;
+  // POST create user
+fastify.post(
+  '/users/create',
+  {
+    schema: createUserSchema,
+    attachValidation: true
+  },
+  async (req, reply) => {
+
+    const roles = await pool.query('SELECT * FROM roles');
+
+    // 🔴 VALIDATION FAILED
+    if (req.validationError) {
+      return reply.status(400).view('users.ejs', {
+        roles: roles.rows,
+        currentUser: req.user,
+        errors: req.validationError.validation,
+        formData: req.body,
+        success: null,
+        error: null
+      });
+    }
 
     try {
-       let roleid =Number(role_id);
-       //hash password
-       const saltRounds=10;
-       const hashedPassword=await bcryptjs.hash(passwords,saltRounds);
-        await pool.query(
-            "INSERT INTO users (user_name, passwords, role_id) VALUES ($1, $2, $3)",
-            [user_name, hashedPassword, roleid]
-        );
+      const { user_name, passwords, role_id } = req.body;
 
-        return reply.send({ success: true, message: "User created" });
+      const hashedPassword = await bcryptjs.hash(passwords, 10);
+
+      await pool.query(
+        'INSERT INTO users (user_name, passwords, role_id) VALUES ($1,$2,$3)',
+        [user_name, hashedPassword, Number(role_id)]
+      );
+
+      return reply.view('users.ejs', {
+        roles: roles.rows,
+        currentUser: req.user,
+        errors: null,
+        formData: {},
+        success: 'User created successfully',
+        error: null
+      });
 
     } catch (err) {
-        return reply.send({ success: false, message: err.message });
+      return reply.view('users.ejs', {
+        roles: roles.rows,
+        currentUser: req.user,
+        errors: null,
+        formData: req.body,
+        success: null,
+        error: err.message
+      });
     }
-});
+  }
+);
 
  // Display address form
   fastify.get('/address', 
@@ -234,6 +274,8 @@ const roles=await pool.query('SELECT * FROM roles')
     }
   );
 
+
+// fastify product
 // Logout route
 fastify.get('/logout', async (req, reply) => {
     reply.clearCookie('token');

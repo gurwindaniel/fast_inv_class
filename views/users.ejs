@@ -1,29 +1,82 @@
 <%- include('./partials/header') %>
-    <h3>Create New User</h3>
-<div id="msgBox"></div>
-<form action="/users/create" method="POST" id="userForm" class="mt-3">
 
+<%
+  function fieldError(field) {
+    if (!errors) return null;
+    return errors.find(e => e.instancePath === '/' + field);
+  }
+%>
+
+<h3>Create New User</h3>
+
+<% if (success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<form action="/users/create" method="POST" class="mt-3">
+
+  <!-- Username -->
   <div class="mb-3">
-      <label class="form-label">User Name</label>
-      <input type="text" id="user_name" name="user_name" class="form-control" >
+    <label class="form-label">User Name</label>
+    <input
+      type="text"
+      name="user_name"
+      value="<%= formData.user_name || '' %>"
+      class="form-control <%= fieldError('user_name') ? 'is-invalid' : '' %>">
+
+    <% if (fieldError('user_name')) { %>
+      <div class="invalid-feedback">
+        <%= fieldError('user_name').message %>
+      </div>
+    <% } %>
   </div>
 
+  <!-- Password -->
   <div class="mb-3">
-      <label class="form-label">Password</label>
-      <input type="password" id="passwords" name="passwords" class="form-control" >
+    <label class="form-label">Password</label>
+    <input
+      type="password"
+      name="passwords"
+      class="form-control <%= fieldError('passwords') ? 'is-invalid' : '' %>">
+
+    <% if (fieldError('passwords')) { %>
+      <div class="invalid-feedback">
+        <%= fieldError('passwords').message %>
+      </div>
+    <% } %>
   </div>
 
+  <!-- Role -->
   <div class="mb-3">
-      <label class="form-label">Role</label>
-      <select class="form-select" id="role_id" name="role_id" >
-          <% roles.forEach(r => { %>
-              <option value="<%= r.role_id %>"><%= r.role_name %></option>
-          <% }) %>
-      </select>
+    <label class="form-label">Role</label>
+    <select
+      name="role_id"
+      class="form-select <%= fieldError('role_id') ? 'is-invalid' : '' %>">
+
+      <option value="">-- Select Role --</option>
+
+      <% roles.forEach(r => { %>
+        <option
+          value="<%= r.role_id %>"
+          <%= formData.role_id == r.role_id ? 'selected' : '' %>>
+          <%= r.role_name %>
+        </option>
+      <% }) %>
+    </select>
+
+    <% if (fieldError('role_id')) { %>
+      <div class="invalid-feedback">
+        <%= fieldError('role_id').message %>
+      </div>
+    <% } %>
   </div>
 
   <button type="submit" class="btn btn-danger">Create User</button>
 
 </form>
-<script src="../public/userAjax.js"></script>
+
 <%- include('./partials/footer') %>
