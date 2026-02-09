@@ -1,0 +1,165 @@
+<%- include('./partials/header') %>
+
+
+<%
+  // Defensive: ensure errors is always defined as array
+  var errors = typeof errors !== 'undefined' && errors ? errors : [];
+  function fieldError(field) {
+    if (!errors) return null;
+    return errors.find(e => e.instancePath === '/' + field);
+  }
+%>
+
+
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-lg-10 mx-auto">
+      <div class="card shadow">
+        <div class="card-header bg-warning text-dark">
+          <h3 class="mb-0">
+            <i class="bi bi-box"></i> Product Management
+          </h3>
+        </div>
+
+        <div class="card-body">
+          <!-- Success Message -->
+          <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <i class="bi bi-check-circle"></i> <%= message %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+
+          <!-- Error Message -->
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <i class="bi bi-exclamation-circle"></i> <%= error %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+
+          <!-- Add Product Form -->
+          <div class="row mb-5">
+            <div class="col-lg-6">
+              <div class="card bg-light">
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Add New Product</h5>
+                </div>
+                <div class="card-body">
+                  <form method="POST" action="/product/create" id="productForm" novalidate>
+                    <div class="mb-3">
+                      <label for="product_name" class="form-label">Product Name</label>
+                      <input 
+                        type="text" 
+                        name="product_name"
+                        id="product_name" 
+                        value="<%= typeof formData !== 'undefined' && formData.product_name ? formData.product_name : (typeof product_name !== 'undefined' ? product_name : '') %>"
+                        class="form-control <%= fieldError('product_name') ? 'is-invalid' : '' %>"
+                      />
+                      <% if (fieldError('product_name')) { %>
+                        <div class="invalid-feedback d-block">
+                          <%= fieldError('product_name').message %>
+                        </div>
+                      <% } %>
+                      <small class="text-muted">Minimum 3 characters</small>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">
+                      <i class="bi bi-plus-circle"></i> Add Product
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Products List -->
+            <div class="col-lg-6">
+              <div class="card bg-light">
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="bi bi-list-check"></i> Existing Products</h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                  <% if (typeof products !== 'undefined' && products.length > 0) { %>
+                    <ul class="list-group list-group-flush">
+                      <% products.forEach((prod, idx) => { %>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                          <div>
+                            <span class="badge bg-secondary me-2"><%= prod.product_id %></span>
+                            <%= prod.product_name %>
+                          </div>
+                          <small class="text-muted">ID: <%= prod.product_id %></small>
+                        </li>
+                      <% }); %>
+                    </ul>
+                  <% } else { %>
+                    <p class="text-muted">No products created yet. Add one to get started!</p>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Products Table -->
+          <hr/>
+          <h5 class="mb-3"><i class="bi bi-table"></i> All Products</h5>
+          <% if (typeof products !== 'undefined' && products.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-hover table-striped">
+                <thead class="table-light">
+                  <tr>
+                    <th><i class="bi bi-hash"></i> Product ID</th>
+                    <th><i class="bi bi-box"></i> Product Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% products.forEach(prod => { %>
+                    <tr>
+                      <td>
+                        <span class="badge bg-secondary"><%= prod.product_id %></span>
+                      </td>
+                      <td><strong><%= prod.product_name %></strong></td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i> No products available. Create one using the form above!
+            </div>
+          <% } %>
+
+          <!-- Action Buttons -->
+          <div class="mt-4 d-flex gap-2">
+            <a href="/grn" class="btn btn-success">
+              <i class="bi bi-receipt"></i> Go to GRN
+            </a>
+            <a href="/grn" class="btn btn-secondary">
+              <i class="bi bi-arrow-left"></i> Back to GRN
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Card -->
+      <div class="card mt-4 bg-light">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-info-circle"></i> Product Management
+          </h5>
+          <ul class="small text-muted mb-0">
+            <li>Create products here before creating GRNs.</li>
+            <li>Each product gets a unique ID for reference.</li>
+            <li>Products can be used in multiple GRNs.</li>
+            <li>Product names help identify goods in receipts.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap Icons CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/bootstrap-icons.min.css">
+
+
+<%- include('./partials/footer') %>
