@@ -1,0 +1,129 @@
+<%- include('./partials/header') %>
+
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12 mb-3">
+      <h2>Dashboard</h2>
+      <p class="text-muted">Overview of sales/purchases and profit/loss.</p>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5>Overall Summary</h5>
+          <canvas id="summaryChart" height="200"></canvas>
+          <div class="mt-3">
+            <strong>Total Sales:</strong> <span id="totalSales">-</span><br/>
+            <strong>Estimated Purchase Cost:</strong> <span id="totalPurchase">-</span><br/>
+            <strong>Profit / Loss:</strong> <span id="profit">-</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <h5>Vendor Filter</h5>
+          <div class="mb-2">
+            <label for="vendorSelect" class="form-label">Select Vendor</label>
+            <select id="vendorSelect" class="form-select">
+              <option value="">-- Select Vendor --</option>
+              <% vendors.forEach(v => { %>
+                <option value="<%= v.address_id %>"><%= v.address_name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <h6 class="mt-3">Vendor Product Profit/Loss</h6>
+          <canvas id="vendorChart" height="200"></canvas>
+          <div id="vendorTableWrapper" class="mt-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <h5>Top Products by Profit</h5>
+          <div id="topProducts" style="min-height:320px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctxSummary = document.getElementById('summaryChart').getContext('2d');
+  const ctxVendor = document.getElementById('vendorChart').getContext('2d');
+  let summaryChart, vendorChart;
+
+  async function loadSummary() {
+    const res = await fetch('/dashboard/summary');
+    const data = await res.json();
+    const totalSales = parseFloat(data.total_sales) || 0;
+    const totalPurchase = parseFloat(data.estimated_purchase_cost) || 0;
+    const profit = parseFloat(data.profit) || 0;
+
+    document.getElementById('totalSales').textContent = '₹ ' + totalSales.toFixed(2);
+    document.getElementById('totalPurchase').textContent = '₹ ' + totalPurchase.toFixed(2);
+    document.getElementById('profit').textContent = '₹ ' + profit.toFixed(2);
+
+    const labels = ['Purchase Cost', 'Profit'];
+    const values = [totalPurchase, profit];
+
+    if (summaryChart) summaryChart.destroy();
+    summaryChart = new Chart(ctxSummary, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data: values, backgroundColor: ['#6c757d','#198754'] }] },
+      options: { responsive: true }
+    });
+  }
+
+  async function loadVendorProducts(vendorId) {
+    if (!vendorId) {
+      // clear chart and table
+      if (vendorChart) vendorChart.destroy();
+      document.getElementById('vendorTableWrapper').innerHTML = '';
+      return;
+    }
+
+    const res = await fetch('/dashboard/vendor-products?vendor_id=' + vendorId);
+    const rows = await res.json();
+
+    const labels = rows.map(r => r.product_name);
+    const profits = rows.map(r => parseFloat(r.profit_est || 0).toFixed(2));
+    const sales = rows.map(r => parseFloat(r.sales_amount || 0).toFixed(2));
+
+    // render bar chart
+    if (vendorChart) vendorChart.destroy();
+    vendorChart = new Chart(ctxVendor, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Profit', data: profits, backgroundColor: '#0d6efd' },
+          { label: 'Sales', data: sales, backgroundColor: '#198754' }
+        ]
+      },
+      options: { responsive: true }
+    });
+
+    // render table
+    let html = '<table class="table table-striped"><thead><tr><th>Product</th><th>Received Qty</th><th>Sold Qty</th><th>Sales</th><th>Received Cost</th><th>Profit Est</th></tr></thead><tbody>';
+    rows.forEach(r => {
+      html += `<tr><td>${r.product_name}</td><td>${r.received_qty}</td><td>${r.sold_qty || 0}</td><td>₹ ${parseFloat(r.sales_amount||0).toFixed(2)}</td><td>₹ ${parseFloat(r.received_cost||0).toFixed(2)}</td><td>₹ ${parseFloat(r.profit_est||0).toFixed(2)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('vendorTableWrapper').innerHTML = html;
+  }
+
+  document.getElementById('vendorSelect').addEventListener('change', function () {
+    loadVendorProducts(this.value);
+  });
+
+  // initial load
+  loadSummary();
+</script>
+
+<%- include('./partials/footer') %>

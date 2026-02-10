@@ -1,0 +1,137 @@
+<%- include('./partials/header') %>
+
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0"><i class="bi bi-file-earmark-text"></i> Create Invoice</h3>
+        </div>
+        <div class="card-body">
+
+          <% if (message) { %>
+            <div class="alert alert-success"><%= message %></div>
+          <% } %>
+          <% if (error) { %>
+            <div class="alert alert-danger"><%= error %></div>
+          <% } %>
+
+          <form id="invoiceForm" method="POST" action="/invoice/create">
+
+            <div class="mb-3">
+              <label for="customer_address_id" class="form-label">Customer Address</label>
+              <select id="customer_address_id" name="customer_address_id" class="form-select" required>
+                <option value="">-- Select Customer Address --</option>
+                <% customerAddresses.forEach(c => { %>
+                  <option value="<%= c.address_id %>"><%= c.address_name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="vendor_address_id" class="form-label">Vendor Address (optional)</label>
+              <select id="vendor_address_id" name="vendor_address_id" class="form-select">
+                <option value="">-- Select Vendor (to filter products) --</option>
+                <% vendorAddresses.forEach(v => { %>
+                  <option value="<%= v.address_id %>"><%= v.address_name %></option>
+                <% }) %>
+              </select>
+              <div class="form-text">Selecting a vendor will show only products received from that vendor.</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="product_id" class="form-label">Product</label>
+              <select id="product_id" name="product_id" class="form-select" required>
+                <option value="">-- Select Product --</option>
+                <% if (products && products.length) { %>
+                  <% products.forEach(p => { %>
+                    <option value="<%= p.product_id %>" data-received-price="<%= Number(p.received_price || 0).toFixed(2) %>"><%= p.product_name %></option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+
+            <!-- Display received price for selected product (populated by JS) -->
+            <div id="received_price_container" class="mb-2" style="display:none;">
+              <small class="text-muted">Received price: <span id="received_price_value">0.00</span> ₹</small>
+            </div>
+
+            <div class="mb-3">
+              <label for="sale_quantity" class="form-label">Quantity</label>
+              <input type="number" min="1" step="1" id="sale_quantity" name="sale_quantity" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+              <label for="sale_amount" class="form-label">Amount (₹)</label>
+              <input type="number" min="0" step="0.01" id="sale_amount" name="sale_amount" class="form-control" required />
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">Create Invoice</button>
+              <a href="/invoice/list" class="btn btn-secondary">View Invoices</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // When vendor or customer changes, fetch products that were received from that vendor for that customer
+  async function updateProductList() {
+    const vendorId = document.getElementById('vendor_address_id').value;
+    const customerId = document.getElementById('customer_address_id').value;
+    const prodSelect = document.getElementById('product_id');
+    prodSelect.innerHTML = '<option value="">-- Select Product --</option>';
+    // hide received price when vendor/customer changes
+    document.getElementById('received_price_container').style.display = 'none';
+    document.getElementById('received_price_value').textContent = '0.00';
+
+    if (!vendorId || !customerId) return;
+
+    try {
+      const res = await fetch(`/invoice/vendor-products?vendor_id=${vendorId}&customer_id=${customerId}`);
+      const data = await res.json();
+      if (Array.isArray(data) && data.length) {
+        data.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.product_id;
+          opt.textContent = p.product_name;
+          // attach received price (formatted to 2 decimals)
+          opt.dataset.receivedPrice = (Number(p.received_price || 0)).toFixed(2);
+          prodSelect.appendChild(opt);
+        });
+      } else {
+        // no products
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No products found for this vendor and customer';
+        prodSelect.appendChild(opt);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  document.getElementById('vendor_address_id').addEventListener('change', updateProductList);
+  document.getElementById('customer_address_id').addEventListener('change', updateProductList);
+
+  // When product changes, display received price (if present)
+  document.getElementById('product_id').addEventListener('change', function () {
+    const opt = this.options[this.selectedIndex];
+    const price = opt ? opt.dataset.receivedPrice : null;
+    const container = document.getElementById('received_price_container');
+    const span = document.getElementById('received_price_value');
+    if (price && price !== 'undefined') {
+      // format number to 2 decimals
+      const num = Number(price) || 0;
+      span.textContent = num.toFixed(2);
+      container.style.display = '';
+    } else {
+      span.textContent = '0.00';
+      container.style.display = 'none';
+    }
+  });
+</script>
+
+<%- include('./partials/footer') %>

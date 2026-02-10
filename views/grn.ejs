@@ -1,0 +1,157 @@
+<%- include('./partials/header') %>
+
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow">
+        <div class="card-header bg-success text-white">
+          <h3 class="mb-0">
+            <i class="bi bi-receipt"></i> Create GRN (Goods Receipt Note)
+          </h3>
+        </div>
+
+        <div class="card-body">
+          <!-- Success Message -->
+          <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <i class="bi bi-check-circle"></i> <%= message %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+
+          <!-- Error Message -->
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <i class="bi bi-exclamation-circle"></i> <%= error %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+
+          <!-- GRN Form -->
+          <form method="POST" action="/grn" id="grnForm" novalidate>
+           <div class="row">
+            <!-- Address Selection -->
+            <div class="mb-3">
+              <label for="address_id" class="form-label">
+                <i class="bi bi-geo-alt"></i> Delivery Address
+              </label>
+              <select 
+                class="form-select" 
+                id="address_id" 
+                name="address_id" 
+                required
+              >
+                <option value="">-- Select Address --</option>
+                <% if (typeof addresses !== 'undefined' && addresses.length > 0) { %>
+                  <% addresses.forEach(addr => { %>
+                    <option value="<%= addr.address_id %>">
+                      <%= addr.address_name %><% if (addr.person_type) { %> (<%= addr.person_type %>)<% } %>
+                    </option>
+                  <% }); %>
+                <% } else { %>
+                  <option value="" disabled>No addresses available. <a href="/address">Create one first</a></option>
+                <% } %>
+              </select>
+              <small class="text-muted">Select the destination address for this GRN</small>
+            </div>
+            </div>
+            <!-- Product Selection -->
+             <div class="row">
+            <div class="mb-3 col-md-8">
+              <label for="product_id" class="form-label">
+                <i class="bi bi-box"></i> Product
+              </label>
+              <select 
+                class="form-select" 
+                id="product_id" 
+                name="product_id" 
+                required
+              >
+                <option value="">-- Select Product --</option>
+                <% if (typeof products !== 'undefined' && products.length > 0) { %>
+                  <% products.forEach(prod => { %>
+                    <option value="<%= prod.product_id %>"><%= prod.product_name %></option>
+                  <% }); %>
+                <% } else { %>
+                  <option value="" disabled>No products available. <a href="/product">Create one first</a></option>
+                <% } %>
+              </select>
+              <small class="text-muted">Choose the product being received. Need a new product? <a href="/product">Add it here</a></small>
+            </div>
+
+            <!-- GRN Quantity -->
+            <div class="mb-3 col-md-4">
+              <label for="grn_quantity" class="form-label">
+                <i class="bi bi-hash"></i> Quantity
+              </label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="grn_quantity" 
+                name="grn_quantity"
+                placeholder="e.g., 100" 
+                min="1"
+                step="1"
+                required
+              />
+              <small class="text-muted">Enter quantity in whole units</small>
+            </div>
+            </div>
+            <!-- GRN Amount -->
+            <div class="mb-3">
+              <label for="grn_amount" class="form-label">
+                <i class="bi bi-currency-dollar"></i> Amount (₹)
+              </label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="grn_amount" 
+                name="grn_amount"
+                placeholder="e.g., 50000.00" 
+                min="0"
+                step="0.01"
+                required
+              />
+              <small class="text-muted">Enter the total amount. Decimals allowed (e.g., 1000.50)</small>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Create GRN
+              </button>
+              <a href="/grn/list" class="btn btn-secondary">
+                <i class="bi bi-list"></i> View All GRNs
+              </a>
+              <a href="/grn" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to GRN
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Info Card -->
+      <div class="card mt-4 bg-light">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-info-circle"></i> GRN Information
+          </h5>
+          <ul class="small text-muted mb-0">
+            <li>GRN (Goods Receipt Note) tracks incoming goods from suppliers.</li>
+            <li>Each GRN must be linked to an address (Vendor/Customer location).</li>
+            <li>You can only use addresses you have created.</li>
+            <li>Products must be created in the <a href="/product">Product Management</a> page first.</li>
+            <li>All GRNs are automatically timestamped for audit purposes.</li>
+            <li>Click "View All GRNs" to see your receipt history.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap Icons CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/bootstrap-icons.min.css">
+
+<%- include('./partials/footer') %>

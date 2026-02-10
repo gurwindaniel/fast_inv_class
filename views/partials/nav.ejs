@@ -1,6 +1,8 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg" style="background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #43a047 100%); box-shadow: 0 2px 8px rgba(13, 71, 161, 0.15);">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/">InventoryApp</a>
+    <a class="navbar-brand fw-bold text-white" href="/" style="font-size: 1.6rem; letter-spacing: 1px;">
+      <i class="bi bi-box-seam me-2"></i>Inventory<span style="color:#ffd600;">Manager</span>
+    </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
@@ -10,36 +12,48 @@
 
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav">
+        <% if (currentUser && currentUser.role_id === 1) { %>
         <li class="nav-item">
-          <a class="nav-link" href="/">Home</a>
+          <a class="nav-link text-white" href="/users" style="font-weight:500;">
+            <i class="bi bi-people me-1"></i> Users
+          </a>
         </li>
-        
+        <% } %>
+
         <li class="nav-item">
-          <a class="nav-link" href="/users">Users</a>
+          <a class="nav-link text-white" href="/address" style="font-weight:500;">
+            <i class="bi bi-geo-alt me-1"></i> Address
+          </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" href="/address">Address</a>
+          <a class="nav-link text-white" href="/product" style="font-weight:500;">
+            <i class="bi bi-boxes me-1"></i> Products
+          </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" href="/product">Products</a>
+          <a class="nav-link text-white" href="/grn" style="font-weight:500;">
+            <i class="bi bi-receipt me-1"></i> GRN
+          </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" href="/grn">GRN</a>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link" href="/invoice">Invoice</a>
+          <a class="nav-link text-white" href="/invoice" style="font-weight:500;">
+            <i class="bi bi-file-earmark-text me-1"></i> Invoice
+          </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/dashboard">Dashboard</a>
+          <a class="nav-link text-white" href="/dashboard" style="font-weight:500;">
+            <i class="bi bi-speedometer2 me-1"></i> Dashboard
+          </a>
         </li>
         </ul>
         <ul class="navbar-nav ms-auto">
          <li class="nav-item">
-          <a class="nav-link" href="/logout">Logout</a>
+          <a class="nav-link text-warning fw-bold" href="/logout" style="font-size:1.1rem;">
+            <i class="bi bi-box-arrow-right me-1"></i> Logout
+          </a>
         </li>
         </ul>
     </div>

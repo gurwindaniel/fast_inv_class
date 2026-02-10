@@ -1,0 +1,113 @@
+<%- include('./partials/header') %>
+
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card shadow">
+        <div class="card-header bg-info text-white">
+          <h3 class="mb-0">
+            <i class="bi bi-receipt"></i> GRN History
+          </h3>
+        </div>
+
+        <div class="card-body">
+          <!-- Buttons -->
+          <div class="mb-3">
+            <a href="/grn" class="btn btn-success">
+              <i class="bi bi-plus-circle"></i> Create New GRN
+            </a>
+            <a href="/grn" class="btn btn-secondary">
+              <i class="bi bi-arrow-left"></i> Back to GRN
+            </a>
+          </div>
+
+          <!-- GRNs Table -->
+          <% if (typeof grns !== 'undefined' && grns.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-hover table-striped">
+                <thead class="table-light">
+                  <tr>
+                    <th><i class="bi bi-hash"></i> GRN ID</th>
+                    <th><i class="bi bi-box"></i> Product</th>
+                    <th><i class="bi bi-geo-alt"></i> Address</th>
+                    <th><i class="bi bi-person-badge"></i> Type</th>
+                    <th><i class="bi bi-boxes"></i> Quantity</th>
+                    <th><i class="bi bi-currency-dollar"></i> Amount (₹)</th>
+                    <th><i class="bi bi-calendar-event"></i> Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% grns.forEach(grn => { %>
+                    <tr>
+                      <td>
+                        <span class="badge bg-primary"><%= grn.grn_id %></span>
+                      </td>
+                      <td><strong><%= grn.product_name %></strong></td>
+                      <td><%= grn.address_name %></td>
+                      <td>
+                        <span class="badge bg-<%= grn.person_type === 'Vendor' ? 'warning' : 'success' %>">
+                          <%= grn.person_type %>
+                        </span>
+                      </td>
+                      <td>
+                        <div class="text-end">
+                          <strong><%= grn.grn_quantity %></strong> units
+                        </div>
+                      </td>
+                      <td>
+                        <div class="text-end">
+                          <strong class="text-success">₹ <%= parseFloat(grn.grn_amount).toFixed(2) %></strong>
+                        </div>
+                      </td>
+                      <td>
+                        <small class="text-muted">
+                          <%= new Date(grn.grn_date).toLocaleDateString() %>
+                          <br/>
+                          <%= new Date(grn.grn_date).toLocaleTimeString() %>
+                        </small>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+
+              <!-- Summary -->
+              <div class="mt-4">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="card bg-light">
+                      <div class="card-body">
+                        <h6 class="card-title text-muted">Total GRNs</h6>
+                        <h2 class="text-primary"><%= grns.length %></h2>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="card bg-light">
+                      <div class="card-body">
+                        <h6 class="card-title text-muted">Total Amount</h6>
+                        <h2 class="text-success">
+                          ₹ <%= grns.reduce((sum, g) => sum + parseFloat(g.grn_amount), 0).toFixed(2) %>
+                        </h2>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% } else { %>
+            <div class="alert alert-info" role="alert">
+              <i class="bi bi-info-circle"></i> No GRNs found.
+              <a href="/grn" class="alert-link">Create your first GRN!</a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap Icons CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/bootstrap-icons.min.css">
+
+<%- include('./partials/footer') %>
