@@ -144,15 +144,61 @@ fastify.get('/users', async (request, reply) => {
   });
 });
 
-// Example: If you have a POST /users/create route, restrict it to admin only
-// fastify.post('/users/create', async (request, reply) => {
-//   if (!request.user || request.user.role_id !== 1) {
-//     return reply.code(403).send('Forbidden: Only admin can create users.');
-//   }
-//   // ...user creation logic...
-// });
-
-//submit users
+// Handle user creation (admin only)
+fastify.post('/users/create', async (request, reply) => {
+  if (!request.user || request.user.role_id !== 1) {
+    return reply.code(403).send('Forbidden: Only admin can create users.');
+  }
+  const { user_name, passwords, role_id } = request.body;
+  const roles = await pool.query('SELECT * FROM roles');
+  let errors = [];
+  let formData = { user_name, role_id };
+  // Basic validation
+  if (!user_name || !passwords || !role_id) {
+    errors.push('All fields are required.');
+  }
+  // Check if username already exists
+  const existing = await pool.query('SELECT * FROM users WHERE user_name = $1', [user_name]);
+  if (existing.rows.length > 0) {
+    errors.push('Username already exists.');
+  }
+  if (errors.length > 0) {
+    return reply.view('users.ejs', {
+      roles: roles.rows,
+      currentUser: request.user,
+      errors,
+      formData,
+      success: null,
+      error: null
+    });
+  }
+  try {
+    // Hash password
+    const hashedPassword = await bcryptjs.hash(passwords, 10);
+    // Insert user
+    const result = await pool.query(
+      'INSERT INTO users (user_name, passwords, role_id) VALUES ($1, $2, $3) RETURNING user_id',
+      [user_name, hashedPassword, parseInt(role_id, 10)]
+    );
+    return reply.view('users.ejs', {
+      roles: roles.rows,
+      currentUser: request.user,
+      errors: null,
+      formData: {},
+      success: `User created successfully! User ID: ${result.rows[0].user_id}`,
+      error: null
+    });
+  } catch (err) {
+    return reply.view('users.ejs', {
+      roles: roles.rows,
+      currentUser: request.user,
+      errors: null,
+      formData,
+      success: null,
+      error: err.message || 'Failed to create user.'
+    });
+  }
+});
 
   // ...existing code...
 
